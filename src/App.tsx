@@ -1,3 +1,4 @@
+import {Inventory,useInventorySummary} from './Inventory';
 import { useState, type FormEvent } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { ArrowRight, Eye, EyeOff, Gem, LockKeyhole, LogOut, ShieldCheck, UserRound, Sparkles, LayoutDashboard, Package, ShoppingBag, Users, ChartNoAxesCombined, Settings, Menu, X, Search, AlertTriangle, CalendarDays, ChevronRight, Plus, ReceiptIndianRupee } from 'lucide-react';
@@ -43,12 +44,13 @@ function Dashboard({session,onLogout}:{session:Session;onLogout:()=>void}) {
  const [section,setSection]=useState<Section>('Dashboard');
  const [sidebarOpen,setSidebarOpen]=useState(false);
  const [search,setSearch]=useState('');
+ const {summary,error:inventoryError,reload:reloadInventory}=useInventorySummary(session.accessToken);
  const select=(next:Section)=>{setSection(next);setSidebarOpen(false);};
  const metrics=[
   {label:"Today's sales",value:'₹0',hint:'Sales service not connected',icon:ReceiptIndianRupee},
-  {label:'Total products',value:'0',hint:'Inventory service not connected',icon:Gem},
+  {label:'Total products',value:summary?String(summary.totalProducts):'—',hint:inventoryError||'From Inventory Service',icon:Gem},
   {label:'Total customers',value:'0',hint:'Customer service not connected',icon:Users},
-  {label:'Low stock alerts',value:'0',hint:'Inventory service not connected',icon:AlertTriangle}
+  {label:'Available products',value:summary?String(summary.availableProducts):'—',hint:inventoryError||'From Inventory Service',icon:Package}
  ];
  return <div className="erp-shell">
   {sidebarOpen&&<button className="sidebar-overlay" aria-label="Close navigation" onClick={()=>setSidebarOpen(false)}/>}
@@ -61,8 +63,8 @@ function Dashboard({session,onLogout}:{session:Session;onLogout:()=>void}) {
   <div className="erp-main">
    <header className="erp-topbar"><div className="topbar-left"><button className="menu-toggle" aria-label="Open navigation" onClick={()=>setSidebarOpen(true)}><Menu size={22}/></button><span className="breadcrumb">Workspace</span><ChevronRight size={15}/><strong>{section}</strong></div><div className="topbar-actions"><label className="erp-search"><Search size={17}/><input aria-label="Search" placeholder="Search workspace..." value={search} onChange={e=>setSearch(e.target.value)}/></label><span className="topbar-date"><CalendarDays size={16}/>{new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</span><span className="topbar-avatar">{session.username.slice(0,1).toUpperCase()}</span></div></header>
    <main className="erp-content">
-    {section==='Dashboard'?<>
-     <div className="welcome-row"><div><span className="overline">BUSINESS OVERVIEW</span><h1>Good to see you, {session.username} <span className="wave">✦</span></h1><p>Here's your jewellery store at a glance.</p></div><span className="live-label"><span/> Demo overview</span></div>
+    {section==='Inventory'?<Inventory token={session.accessToken} roles={session.roles} onChanged={()=>void reloadInventory()}/>:section==='Dashboard'?<>
+     <div className="welcome-row"><div><span className="overline">BUSINESS OVERVIEW</span><h1>Good to see you, {session.username} <span className="wave">✦</span></h1><p>Here's your jewellery store at a glance.</p></div><span className="live-label"><span/> Live inventory</span></div>
      <div className="metrics-grid">{metrics.map(metric=><article className="metric-card" key={metric.label}><div className="metric-top"><span>{metric.label}</span><span className="metric-icon"><metric.icon size={20}/></span></div><strong>{metric.value}</strong><small>{metric.hint}</small></article>)}</div>
      <div className="dashboard-columns"><section className="erp-panel"><div className="panel-heading"><div><h2>Sales overview</h2><p>Revenue and transactions</p></div><span className="panel-chip">Coming soon</span></div><div className="chart-empty"><span className="chart-symbol"><ChartNoAxesCombined size={30}/></span><strong>Sales analytics will appear here</strong><p>Connect the Sales Service to display revenue trends and transactions.</p><button onClick={()=>select('Sales')}>Explore sales <ArrowRight size={15}/></button></div></section><section className="erp-panel quick-panel"><div className="panel-heading"><div><h2>Quick actions</h2><p>Get things done faster</p></div></div><button onClick={()=>select('Inventory')}><span className="quick-icon"><Plus size={20}/></span><span><strong>Add jewellery product</strong><small>Open inventory workspace</small></span><ChevronRight size={17}/></button><button onClick={()=>select('Sales')}><span className="quick-icon"><ShoppingBag size={20}/></span><span><strong>Create new sale</strong><small>Open billing workspace</small></span><ChevronRight size={17}/></button><button onClick={()=>select('Customers')}><span className="quick-icon"><Users size={20}/></span><span><strong>Manage customers</strong><small>Open customer workspace</small></span><ChevronRight size={17}/></button></section></div>
      <section className="erp-panel recent-panel"><div className="panel-heading"><div><h2>Recent transactions</h2><p>Latest sales activity</p></div><button className="text-link" onClick={()=>select('Sales')}>View all <ArrowRight size={16}/></button></div><div className="empty-transactions"><ReceiptIndianRupee size={26}/><strong>No transactions to display</strong><p>Transactions will appear here after the Sales Service is integrated.</p></div></section>
