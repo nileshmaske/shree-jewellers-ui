@@ -80,12 +80,56 @@ export function Billing({token,roles}:{token:string;roles:string[]}){
    'Draft only. Subject to stock and final price confirmation.'].join('\\n');
  }
  function printDraft(inv:Invoice){
-  const popup=window.open('','_blank','width=820,height=700');
+  const popup=window.open('','_blank','width=900,height=760');
   if(!popup){setError('Allow pop-ups to print the draft.');return}
-  const escapeHtml=(value:string)=>value.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]||c));
-  const body=escapeHtml(draftText(inv));
-  popup.document.write('<!doctype html><html><head><title>Draft '+escapeHtml(inv.invoiceNumber)+'</title><style>body{font:15px Arial,sans-serif;max-width:720px;margin:40px auto;color:#243b2e}pre{white-space:pre-wrap;font:inherit;line-height:1.9}.watermark{font-size:32px;color:#b85d3c;font-weight:bold}</style></head><body><div class="watermark">DRAFT — NOT A TAX INVOICE</div><pre>'+body+'</pre></body></html>');
-  popup.document.close();popup.focus();popup.print();
+  const esc=(v:unknown)=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]||c));
+  const amount=(v:number)=>esc(currency(v));
+  const date=inv.createdAt?new Date(inv.createdAt).toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'}):'—';
+  const rows=inv.items.map((item,index)=>'<tr><td class="center">'+(index+1)+'</td><td><strong>'+esc(item.description)+'</strong><small>SKU: '+esc(item.sku)+'</small></td><td class="center">'+esc(item.quantity)+'</td><td class="right">'+amount(item.unitPrice)+'</td><td class="right">'+amount(item.lineTotal)+'</td></tr>').join('');
+  const html=`<!doctype html><html lang="en"><head><meta charset="UTF-8"><title>Draft Estimate - ${esc(inv.invoiceNumber)}</title>
+  <style>
+  @page{size:A4;margin:14mm}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#24352b;background:#fff}
+  .sheet{max-width:210mm;margin:0 auto}
+  .brand{display:flex;justify-content:space-between;align-items:start;gap:20px;border-bottom:3px solid #244c38;padding-bottom:16px}
+  .brand h1{font-family:Georgia,serif;font-size:27px;letter-spacing:1.5px;color:#214c36;margin:0 0 5px}
+  .brand p{margin:0;color:#67766c;font-size:11px}
+  .draft{border:2px solid #a97831;padding:9px 12px;text-align:center;font-weight:bold;color:#8a5b20;letter-spacing:1px;font-size:12px}
+  .draft small{display:block;font-size:9px;margin-top:5px;letter-spacing:0}
+  .heading{text-align:center;margin:20px 0 15px;font-size:16px;font-weight:bold;letter-spacing:1px}
+  .details{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin:18px 0 22px}
+  .details>div{border:1px solid #dfe5df;padding:12px 14px;min-height:90px}
+  .label{font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:#718277;font-weight:bold;margin-bottom:9px}
+  .details p{margin:6px 0;line-height:1.5;overflow-wrap:anywhere}
+  table{width:100%;border-collapse:collapse}
+  th{background:#eef3ee;color:#2d503a;text-transform:uppercase;letter-spacing:.3px;font-size:10px;text-align:left;padding:11px 9px;border:1px solid #d7e1d7}
+  td{border:1px solid #e0e7e0;padding:11px 9px;vertical-align:top;overflow-wrap:anywhere}
+  td small{display:block;color:#718277;margin-top:5px}
+  .center{text-align:center}.right{text-align:right;white-space:nowrap}
+  .totals{width:310px;max-width:100%;margin:20px 0 20px auto}
+  .totals div{display:flex;justify-content:space-between;gap:12px;padding:9px 3px;border-bottom:1px solid #e6eae5}
+  .totals div span:last-child{font-weight:bold;white-space:nowrap}
+  .totals .grand{font-size:16px;color:#214c36;border-top:2px solid #214c36;border-bottom:2px solid #214c36;padding:13px 3px}
+  .notice{border:1px solid #d6dcd6;background:#f7f9f7;padding:12px 14px;line-height:1.7;color:#576b5d;margin-top:22px}
+  footer{display:flex;justify-content:space-between;gap:20px;border-top:1px solid #dfe5df;padding-top:13px;margin-top:30px;color:#78877b;font-size:10px}
+  .print-actions{display:flex;justify-content:flex-end;margin:0 0 20px}
+  .print-actions button{background:#24563b;border:0;color:#fff;border-radius:7px;padding:11px 18px;cursor:pointer}
+  tr{break-inside:avoid}
+  @media print{.print-actions{display:none}.sheet{max-width:none}body{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
+  @media screen{body{padding:24px;background:#eef1ec}.sheet{background:#fff;padding:30px;box-shadow:0 6px 25px #00000012}}
+  </style></head><body><div class="sheet">
+  <div class="print-actions"><button onclick="window.print()">Print Estimate</button></div>
+  <header class="brand"><div><h1>SHREE JEWELLERS</h1><p>Jewellery Estimate · Customer Copy</p></div><div class="draft">DRAFT ESTIMATE<small>NOT A TAX INVOICE</small></div></header>
+  <div class="heading">JEWELLERY ESTIMATE</div>
+  <section class="details"><div><div class="label">Customer details</div><p><strong>${esc(inv.customerName)}</strong></p><p>Mobile: ${esc(inv.customerPhone||'Not provided')}</p></div>
+  <div><div class="label">Estimate details</div><p><strong>Reference:</strong> ${esc(inv.invoiceNumber)}</p><p><strong>Date:</strong> ${esc(date)}</p><p><strong>Status:</strong> ${esc(inv.status)}</p></div></section>
+  <table><thead><tr><th style="width:7%">#</th><th>Jewellery description</th><th style="width:9%" class="center">Qty</th><th style="width:19%" class="right">Unit price</th><th style="width:19%" class="right">Amount</th></tr></thead><tbody>${rows}</tbody></table>
+  <section class="totals"><div><span>Subtotal</span><span>${amount(inv.subtotal)}</span></div><div><span>Discount</span><span>− ${amount(inv.discount)}</span></div><div><span>Taxable amount</span><span>${amount(inv.taxableAmount)}</span></div><div><span>Estimated GST (${esc(inv.gstRate)}%)</span><span>${amount(inv.gstAmount)}</span></div><div class="grand"><span>Estimated total</span><span>${amount(inv.grandTotal)}</span></div></section>
+  <div class="notice"><strong>Important:</strong> This document is a draft estimate only. It is not a GST tax invoice, payment receipt or confirmation of sale. Prices, tax, stock availability and final amounts are subject to verification before checkout.</div>
+  <footer><span>Shree Jewellers · Computer-generated draft estimate</span><span>Thank you for visiting</span></footer>
+  </div></body></html>`;
+  popup.document.open();popup.document.write(html);popup.document.close();popup.focus();
  }
  async function smsDraft(inv:Invoice){
   const phone=(inv.customerPhone||'').replace(/[^+0-9]/g,'');
