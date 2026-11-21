@@ -37,15 +37,18 @@ async function signIn(username: string, password: string): Promise<Session> {
   const me = await fetch('/api/auth/me', { headers: { Authorization: `Bearer ${data.accessToken}` } });
   if (!me.ok) throw new Error('Could not verify your account.');
 
-  const profile: { username: string; roles: string[] } = await me.json();
-  return { username: profile.username, roles: profile.roles ?? [], accessToken: data.accessToken };
+  const profile: { username?: unknown; roles?: unknown } = await me.json();
+  if (typeof profile?.username !== 'string' || !profile.username.trim() || !Array.isArray(profile.roles)) {
+    throw new Error('The server returned an invalid staff profile.');
+  }
+  return { username: profile.username, roles: profile.roles.filter((role): role is string => typeof role === 'string'), accessToken: data.accessToken };
 }
 
 function Brand() {
   return (
     <div className="brand">
       <span className="brand-mark"><Gem size={22} strokeWidth={1.5} aria-hidden="true" /></span>
-      <span>Shree Jewellers</span>
+      <span className="brand-wordmark">Shree <em>Jewellers</em></span>
     </div>
   );
 }
@@ -72,7 +75,9 @@ function Login({ onLogin }: { onLogin: (session: Session) => void }) {
       onLogin(session);
       navigate('/dashboard', { replace: true });
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Something went wrong.');
+      setError(error instanceof TypeError
+        ? 'Cannot reach the authentication service. Check that the API server is running.'
+        : error instanceof Error ? error.message : 'Something went wrong.');
     } finally {
       setBusy(false);
     }
@@ -83,8 +88,9 @@ function Login({ onLogin }: { onLogin: (session: Session) => void }) {
       <section className="login-panel" aria-labelledby="login-title">
         <Brand />
         <div className="login-card">
-          <h1 id="login-title">Sign in</h1>
-          <p>Use your staff credentials to access your workspace.</p>
+          <span className="eyebrow">STAFF PORTAL</span>
+          <h1 id="login-title">Welcome back.</h1>
+          <p>Sign in to manage your jewellery store with confidence.</p>
           <form className="login-form" onSubmit={submit}>
             <label htmlFor="username">Username</label>
             <div className="field-with-icon">
@@ -107,7 +113,13 @@ function Login({ onLogin }: { onLogin: (session: Session) => void }) {
         </div>
         <p className="login-footer"><ShieldCheck size={16} aria-hidden="true" /> Authorized staff access</p>
       </section>
-      <div className="login-visual jewellery-art" aria-hidden="true" />
+      <div className="login-visual jewellery-art">
+        <div className="login-visual-copy">
+          <span className="eyebrow">MADE FOR THE DETAILS</span>
+          <h2>Beautiful jewellery.<br />Better business.</h2>
+          <p>A thoughtful workspace for every piece, every customer, every day.</p>
+        </div>
+      </div>
     </main>
   );
 }
@@ -138,6 +150,7 @@ function WorkspaceNavigation({ session, section, onSelect, onLogout, onClose }: 
         <Brand />
         {onClose && <button className="icon-button sidebar-button" aria-label="Close navigation" onClick={onClose}><X size={20} aria-hidden="true" /></button>}
       </div>
+      <span className="sidebar-section-label">STORE MANAGEMENT</span>
       <nav className="workspace-nav" aria-label="Main navigation">
         {navItems.map(({ label, icon: Icon }) => (
           <button key={label} type="button" aria-current={section === label ? 'page' : undefined} onClick={() => onSelect(label)}>
@@ -146,6 +159,10 @@ function WorkspaceNavigation({ session, section, onSelect, onLogout, onClose }: 
           </button>
         ))}
       </nav>
+      <div className="sidebar-support">
+        <span className="sidebar-support-icon"><ShieldCheck size={19} aria-hidden="true" /></span>
+        <div><strong>Staff workspace</strong><span>Manage with confidence</span></div>
+      </div>
       <div className="sidebar-profile">
         <span className="avatar" aria-hidden="true">{session.username.slice(0, 1).toUpperCase()}</span>
         <div className="sidebar-account">
@@ -173,10 +190,10 @@ function Overview({ session, onSelect, inventory, rates, ratesError }: {
 }) {
   const { summary, error: inventoryError, reload } = inventory;
   const metrics = [
-    { label: 'Total products', value: summary?.totalProducts, icon: Boxes, tone: 'plum' },
-    { label: 'Available', value: summary?.availableProducts, icon: CircleCheck, tone: 'green' },
-    { label: 'Reserved', value: summary?.reservedProducts, icon: Bookmark, tone: 'gold' },
-    { label: 'Sold', value: summary?.soldProducts, icon: ShoppingBag, tone: 'rose' },
+    { label: 'Total products', value: summary?.totalProducts, icon: Boxes, tone: 'plum', detail: 'Items in your catalogue' },
+    { label: 'Available', value: summary?.availableProducts, icon: CircleCheck, tone: 'green', detail: 'Ready to sell' },
+    { label: 'Reserved', value: summary?.reservedProducts, icon: Bookmark, tone: 'gold', detail: 'On hold for customers' },
+    { label: 'Sold', value: summary?.soldProducts, icon: ShoppingBag, tone: 'rose', detail: 'Marked as sold' },
   ];
   const prices = [
     { label: 'Gold 24K', value: rates?.gold24k },
@@ -190,18 +207,37 @@ function Overview({ session, onSelect, inventory, rates, ratesError }: {
   return (
     <>
       <div className="page-heading overview-heading">
-        <h1>Store overview</h1>
+        <div>
+          <span className="eyebrow">YOUR STORE AT A GLANCE</span>
+          <h1>Store overview</h1>
+          <p>Everything you need to run your day, in one place.</p>
+        </div>
         <button className="button button-primary" onClick={() => onSelect('Billing')}>
-          <Plus size={18} aria-hidden="true" /> New invoice
+          <Plus size={18} aria-hidden="true" /> New draft invoice
         </button>
       </div>
       <section className="overview-hero jewellery-art" aria-labelledby="welcome-title">
         <div className="overview-hero-content">
-          <h2 id="welcome-title">Welcome back, <span>{session.username}.</span></h2>
+          <span className="hero-eyebrow">WELCOME BACK, {session.username.toUpperCase()}</span>
+          <h2 id="welcome-title">Every piece<br /><span>matters.</span></h2>
+          <p>Your jewellery business, beautifully organized from inventory to estimates.</p>
           <button className="button hero-button" onClick={() => onSelect('Inventory')}>
-            Browse inventory <ArrowRight size={16} aria-hidden="true" />
+            Explore inventory <ArrowRight size={16} aria-hidden="true" />
           </button>
         </div>
+      </section>
+
+      <section className="quick-actions" aria-label="Quick actions">
+        <button className="quick-action" type="button" onClick={() => onSelect('Inventory')}>
+          <span className="quick-action-icon"><Package size={21} aria-hidden="true" /></span>
+          <span><strong>Product catalogue</strong><small>View stock, purity and jewellery pricing</small></span>
+          <ArrowRight size={18} aria-hidden="true" />
+        </button>
+        <button className="quick-action" type="button" onClick={() => onSelect('Billing')}>
+          <span className="quick-action-icon"><ReceiptIndianRupee size={21} aria-hidden="true" /></span>
+          <span><strong>Create an estimate</strong><small>Prepare a draft for your customer</small></span>
+          <ArrowRight size={18} aria-hidden="true" />
+        </button>
       </section>
 
       <section className="overview-section" aria-labelledby="stock-heading">
@@ -216,13 +252,14 @@ function Overview({ session, onSelect, inventory, rates, ratesError }: {
           </div>
         )}
         <dl className="metric-grid">
-          {metrics.map(({ label, value, icon: Icon, tone }) => (
+          {metrics.map(({ label, value, icon: Icon, tone, detail }) => (
             <div className="metric-card surface" key={label}>
               <dt>
                 {label}
                 <span className={`metric-icon tone-${tone}`} aria-hidden="true"><Icon size={19} strokeWidth={1.7} /></span>
               </dt>
               <dd>{value == null ? '—' : countFormat.format(value)}</dd>
+              <p className="metric-detail">{detail}</p>
             </div>
           ))}
         </dl>
@@ -231,6 +268,7 @@ function Overview({ session, onSelect, inventory, rates, ratesError }: {
       <section className="surface rates-panel" aria-labelledby="rates-heading">
         <div className="section-heading rates-heading">
           <div>
+            <span className="eyebrow">PRECIOUS METALS</span>
             <h2 id="rates-heading">Gold &amp; silver rates</h2>
             <p>Indicative INR per gram. Excludes GST, making charges and retail premiums.</p>
           </div>
@@ -338,6 +376,7 @@ function Workspace({ session, onLogout }: { session: Session; onLogout: () => vo
             <strong>{section}</strong>
           </div>
           <div className="topbar-meta">
+            <span className="topbar-workspace-label"><Gem size={15} aria-hidden="true" /> Shree Jewellers</span>
             <span><CalendarDays size={16} aria-hidden="true" />{dateFormat.format(new Date())}</span>
             <span className="avatar" aria-hidden="true">{session.username.slice(0, 1).toUpperCase()}</span>
           </div>

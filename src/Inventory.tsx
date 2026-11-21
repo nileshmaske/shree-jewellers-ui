@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import { ChevronLeft, ChevronRight, Package, Pencil, Plus, RefreshCw, Search } from 'lucide-react';
 import { formatINR } from './format';
 import { Modal } from './Modal';
@@ -85,6 +85,7 @@ export function Inventory({ token, roles, onChanged }: { token: string; roles: s
   const [totalPages, setTotalPages] = useState(0);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const requestVersion = useRef(0);
   const [loadError, setLoadError] = useState('');
   const [formError, setFormError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -95,21 +96,27 @@ export function Inventory({ token, roles, onChanged }: { token: string; roles: s
   const canEdit = roles.some(role => ['ADMIN', 'MANAGER', 'ROLE_ADMIN', 'ROLE_MANAGER'].includes(role));
 
   const load = useCallback(async () => {
+    const version = ++requestVersion.current;
     setLoading(true);
     setLoadError('');
     try {
       const data = await inventoryRequest<{ content: Product[]; totalPages: number; totalElements: number }>(`/products?page=${page}&size=10`, token);
+      if (version !== requestVersion.current) return;
       setProducts(data.content);
       setTotalPages(data.totalPages);
       setTotal(data.totalElements);
     } catch (error) {
+      if (version !== requestVersion.current) return;
       setLoadError(error instanceof Error ? error.message : 'Failed to load products.');
     } finally {
-      setLoading(false);
+      if (version === requestVersion.current) setLoading(false);
     }
   }, [page, token]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    void load();
+    return () => { requestVersion.current += 1; };
+  }, [load]);
 
   function openForm(product?: Product) {
     setEditing(product?.id ?? null);
@@ -129,8 +136,13 @@ export function Inventory({ token, roles, onChanged }: { token: string; roles: s
 
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (form.netWeight > form.grossWeight) {
-      setFormError('Net weight cannot exceed gross weight.');
+    const values = [form.grossWeight, form.netWeight, form.stoneWeight, form.makingCharges, form.sellingPrice];
+    if (values.some(value => !Number.isFinite(value) || value < 0)) {
+      setFormError('Enter valid, non-negative weights and prices.');
+      return;
+    }
+    if (form.netWeight <= 0 || form.grossWeight <= 0 || form.netWeight + form.stoneWeight > form.grossWeight + 0.001) {
+      setFormError('Gross and net weights must be positive, and net plus stone weight must not exceed gross weight.');
       return;
     }
     setSaving(true);

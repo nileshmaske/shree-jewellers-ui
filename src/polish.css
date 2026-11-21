@@ -1,0 +1,130 @@
+/* Shree Jewellers — professional retail workspace theme */
+:root {
+  --page:#f4f6f1; --surface:#fffefa; --soft:#f7f9f4; --line:#e2e9e0;
+  --field-line:#cfdacd; --ink:#193329; --muted:#66796e; --brand:#24533d;
+  --brand-hover:#183d2c; --sidebar:#142c24; --sidebar-text:#d5e3d7;
+  --gold:#ebc981; --focus:#a66d27; --shadow:0 8px 26px rgb(18 47 34 / 5%);
+}
+body { background:var(--page); }
+.surface { background:var(--surface); box-shadow:var(--shadow); }
+h1,h2 { letter-spacing:-.035em; }
+h1 {font-size:clamp(2.3rem,4vw,3.35rem);}
+.button-primary { background:var(--brand); }
+.button-primary:hover:not(:disabled) { background:var(--brand-hover); }
+.button-secondary {color:var(--brand);border-color:var(--field-line);}
+.button-secondary:hover:not(:disabled),.icon-button:hover:not(:disabled) {background:#edf4eb;border-color:#b1c8b4;}
+.eyebrow {display:inline-block;color:#97753e;font-size:.72rem;font-weight:800;letter-spacing:.15em;text-transform:uppercase;}
+.brand {font-size:1.55rem;letter-spacing:-.035em;}
+.brand-wordmark em {color:#b88a45;font-style:normal;}
+.brand-mark {background:#f8eedb;color:#87642d;border-color:#e4d5b9;}
+.login-page {background:#edf2e9;}
+.login-panel {background:#fffefa;border:1px solid #e3ebe0;border-radius:19px;}
+.login-card .eyebrow {margin-bottom:12px;}
+.login-card h1 {font-size:clamp(3rem,5vw,4.65rem);}
+.login-card > p {max-width:350px;font-size:1rem;line-height:1.65;}
+.login-visual {
+  display:flex;align-items:flex-end;min-height:550px;padding:clamp(26px,5vw,62px);
+  background-image:linear-gradient(0deg,rgb(9 32 22 / 89%),rgb(9 32 22 / 16%) 75%),var(--jewellery-photo);
+  background-position:center;overflow:hidden;
+}
+.login-visual-copy {position:relative;max-width:540px;color:#fff8e9;}
+.login-visual-copy .eyebrow {color:#ebc981;}
+.login-visual-copy h2 {margin-top:12px;color:#fff8e9;font-size:clamp(2.8rem,5vw,5.2rem);line-height:1.04;}
+.login-visual-copy p {margin-top:16px;max-width:390px;color:#e0ebdc;font-size:1rem;}
+.workspace {grid-template-columns:252px minmax(0,1fr);}
+.workspace-sidebar {background:var(--sidebar);}
+.sidebar-header .brand {font-size:1.3rem;}
+.sidebar-header .brand-mark {background:#35533e;color:#ebc981;border-color:#52734f;}
+.sidebar-header .brand-wordmark em {color:#ebc981;}
+.sidebar-section-label {display:block;margin:46px 13px 11px;color:#97b49c;font-size:.68rem;font-weight:800;letter-spacing:.15em;}
+.workspace-nav {margin-top:0;}
+.workspace-nav button {border-radius:11px;color:#ceded0;}
+.workspace-nav button:hover,.sidebar-button:hover:not(:disabled) {background:#294839;}
+.workspace-nav [aria-current="page"] {background:#30523e;border-color:#496f52;color:#fff;}
+.workspace-nav [aria-current="page"] svg {color:#ebc981;}
+.workspace-nav [aria-current="page"]::after {background:#ebc981;}
+.sidebar-support {display:flex;align-items:center;gap:11px;margin:auto 4px 22px;padding:14px 12px;border:1px solid #365647;border-radius:13px;background:#213d31;}
+.sidebar-support-icon {display:grid;place-items:center;flex:none;width:35px;height:35px;border-radius:10px;background:#365946;color:#ebc981;}
+.sidebar-support strong,.sidebar-support span {display:block;}
+.sidebar-support strong {color:#f7f5e9;font-size:.82rem;}
+.sidebar-support div span {color:#afc7b2;font-size:.72rem;}
+.sidebar-profile {margin-top:0;border-top-color:#355447;}
+.sidebar-account span {color:#a9c5ae;}
+.avatar {background:#e5f0e1;color:#28563b;}
+.topbar {min-height:75px;background:rgb(255 254 250 / 96%);backdrop-filter:blur(12px);}
+.topbar-workspace-label {padding:7px 12px;border:1px solid #e2ebdf;border-radius:100px;background:#f4f8f1;color:#315d42;font-weight:700;}
+.workspace-content {padding-top:37px;}
+.page-heading {margin-bottom:26px;}
+.page-heading h1 {margin-top:5px;}
+.page-heading p {margin-top:9px;}
+.overview-hero {
+  min-height:295px;border-radius:20px;
+  background-image:linear-gradient(90deg,#132e24 0%,rgb(19 46 36 / 98%) 30%,rgb(19 46 36 / 64%) 62%,rgb(19 46 36 / 8%) 100%),var(--jewellery-photo);
+  box-shadow:0 18px 38px rgb(22 53 39 / 11%);
+}
+.overview-hero-content {max-width:68%;}
+.hero-eyebrow {display:block;margin-bottom:12px;color:#f0cb88;font-size:.75rem;font-weight:800;letter-spacing:.13em;}
+.overview-hero h2 {margin-bottom:11px;font-size:clamp(3.1rem,5vw,5rem);line-height:.95;}
+.overview-hero h2 span {color:#f0cb88;}
+.overview-hero p {max-width:370px;color:#e0eadf;font-size:.95rem;line-height:1.5;}
+.hero-button {margin-top:21px;background:#f0d8a9;color:#183e2c;border-color:#f0d8a9;font-weight:750;}
+.hero-button:hover {background:#ffe7bd;color:#183e2c;border-color:#ffe7bd;}
+.quick-actions {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px;margin-top:20px;}
+.quick-action {display:flex;align-items:center;gap:14px;min-width:0;width:100%;padding:18px 20px;background:#fffefa;border:1px solid var(--line);border-radius:15px;text-align:left;box-shadow:var(--shadow);transition:transform .16s,box-shadow .16s;}
+.quick-action:hover {transform:translateY(-2px);box-shadow:0 12px 30px rgb(18 47 34 / 9%);}
+.quick-action-icon {display:grid;place-items:center;flex:none;width:45px;height:45px;border-radius:12px;background:#eaf3e9;color:#2f6447;}
+.quick-action > span:nth-child(2) {display:grid;gap:3px;flex:1;min-width:0;}
+.quick-action strong {color:#234631;font-size:.96rem;}
+.quick-action small {color:var(--muted);font-size:.78rem;}
+.quick-action > svg {color:#86a28c;}
+.overview-section {margin-top:31px;}
+.metric-grid {gap:16px;}
+.metric-card {min-height:159px;padding:22px;}
+.metric-card dt {font-weight:650;}
+.metric-card dd {margin-top:13px;font-size:clamp(1.8rem,2.7vw,2.55rem);font-weight:750;color:#214630;}
+.metric-icon {width:41px;height:41px;border-radius:12px;}
+.metric-detail {margin-top:7px;color:#819287;font-size:.75rem;}
+.tone-plum {background:#e8f0e9;color:#467454;}
+.tone-green {background:#e3f2e6;color:#327147;}
+.tone-gold {background:#fff1d8;color:#966b2e;}
+.tone-rose {background:#f8eae3;color:#985c47;}
+.rates-panel {padding:25px;}
+.rates-heading .eyebrow {margin-bottom:5px;}
+.rate-card {background:#f6f9f3;border-color:#e3eadf;padding:17px;border-radius:12px;}
+.rate-card dd {margin-top:10px;color:#254e37;font-weight:750;}
+.rate-card dt {color:#5b7563;}
+.data-table th {background:#f5f8f3;color:#607568;border-color:#e3eade;}
+.data-table td {border-bottom-color:#eaf0e8;}
+.data-table tr:hover td {background:#f7faf5;}
+.status-available {background:#e7f3e7;color:#28633c;}
+.status-reserved,.status-draft {background:#fbf0d8;color:#896222;}
+.status-sold {background:#e8eeee;color:#47666e;}
+.status-damaged,.status-cancelled {background:#f8e8e1;color:#91483b;}
+.billing-tabs button:hover,.billing-tabs button[aria-pressed="true"] {background:#edf5ea;}
+.billing-tabs button[aria-pressed="true"] {border-bottom-color:var(--brand);color:var(--brand);}
+.billing-grand dd {color:#255b3c;}
+.alert-success {background:#eaf5ea;color:#2e6040;border-color:#c9e5c9;}
+.empty-icon {background:#e8f1e7;color:#416b4a;}
+@media(max-width:960px) {.workspace {grid-template-columns:minmax(0,1fr);} .workspace-content {padding-top:27px;}}
+@media(max-width:740px) {
+ .login-page {background:#fffefa;}
+ .login-visual {min-height:225px;padding:24px;background-position:right 55%;}
+ .login-visual-copy h2 {font-size:2.35rem;}
+ .login-visual-copy p {display:none;}
+ .topbar-workspace-label {display:none!important;}
+ .quick-actions {grid-template-columns:1fr;gap:10px;}
+ .overview-hero {min-height:270px;}
+}
+@media(max-width:480px) {
+ .overview-heading .button {width:100%;}
+ .overview-hero {min-height:275px;padding:24px;background-image:linear-gradient(90deg,#142e25,rgb(20 46 37 / 90%) 59%,rgb(20 46 37 / 35%)),var(--jewellery-photo);}
+ .overview-hero-content {max-width:100%;}
+ .overview-hero h2 {font-size:3.15rem;}
+ .overview-hero p {max-width:230px;font-size:.85rem;}
+ .metric-card {min-height:148px;padding:14px;}
+ .metric-card dd {font-size:1.85rem;}
+ .metric-detail {font-size:.7rem;}
+ .login-visual {min-height:195px;}
+ .login-visual-copy h2 {font-size:2.1rem;}
+}
+@media(prefers-reduced-motion:reduce) {.quick-action {transition:none;}.quick-action:hover {transform:none;}}
