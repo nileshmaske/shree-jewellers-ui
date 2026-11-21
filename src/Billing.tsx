@@ -15,6 +15,7 @@ async function billingRequest<T>(path:string,token:string,init:RequestInit={}):P
   let message='';try{const body=await res.json();message=body.detail||body.message||body.title||''}catch{}
   throw new Error(message||'Billing request failed (HTTP '+res.status+').');
  }
+ if(res.status===204)return undefined as T;
  return res.json() as Promise<T>;
 }
 export function Billing({token,roles}:{token:string;roles:string[]}){
@@ -26,14 +27,14 @@ export function Billing({token,roles}:{token:string;roles:string[]}){
  const [productSearch,setProductSearch]=useState('');const [loadingProducts,setLoadingProducts]=useState(false);
  const [history,setHistory]=useState<Invoice[]>([]);const [historyPage,setHistoryPage]=useState(0);const [historyPages,setHistoryPages]=useState(0);
  const [historyLoading,setHistoryLoading]=useState(false);const [saving,setSaving]=useState(false);
- const [error,setError]=useState('');const [notice,setNotice]=useState('');const [selected,setSelected]=useState<Invoice|null>(null);
+ const [error,setError]=useState('');const [notice,setNotice]=useState('');const [selected,setSelected]=useState<Invoice|null>(null);const [productLoadError,setProductLoadError]=useState('');const [historyLoadError,setHistoryLoadError]=useState('');
  const canCancel=roles.some(role=>['ADMIN','MANAGER','ROLE_ADMIN','ROLE_MANAGER'].includes(role));
- const loadProducts=useCallback(async()=>{setLoadingProducts(true);try{const data=await inventoryRequest<Page<Product>>('/products?page='+productPage+'&size=30',token);setProducts(data.content.filter(p=>p.stockStatus==='AVAILABLE'));setProductTotalPages(data.totalPages)}catch(e){setError(e instanceof Error?e.message:'Unable to load inventory')}finally{setLoadingProducts(false)}},[productPage,token]);
- const loadHistory=useCallback(async()=>{setHistoryLoading(true);try{const data=await billingRequest<Page<Invoice>>('/invoices?page='+historyPage+'&size=10',token);setHistory(data.content);setHistoryPages(data.totalPages)}catch(e){setError(e instanceof Error?e.message:'Unable to load invoices')}finally{setHistoryLoading(false)}},[historyPage,token]);
+ const loadProducts=useCallback(async()=>{setLoadingProducts(true);setProductLoadError('');try{const data=await inventoryRequest<Page<Product>>('/products?page='+productPage+'&size=30',token);setProducts(data.content.filter(p=>p.stockStatus==='AVAILABLE'));setProductTotalPages(data.totalPages)}catch(e){setProducts([]);setProductLoadError(e instanceof Error?e.message:'Unable to load inventory')}finally{setLoadingProducts(false)}},[productPage,token]);
+ const loadHistory=useCallback(async()=>{setHistoryLoading(true);setHistoryLoadError('');try{const data=await billingRequest<Page<Invoice>>('/invoices?page='+historyPage+'&size=10',token);setHistory(data.content);setHistoryPages(data.totalPages)}catch(e){setHistory([]);setHistoryLoadError(e instanceof Error?e.message:'Unable to load invoices')}finally{setHistoryLoading(false)}},[historyPage,token]);
  useEffect(()=>{void loadProducts()},[loadProducts]);
  useEffect(()=>{if(tab==='history')void loadHistory()},[loadHistory,tab]);
  const subtotal=useMemo(()=>items.reduce((sum,item)=>sum+Math.round(item.product.sellingPrice*100)*item.quantity,0)/100,[items]);
- const parsedDiscount=Number(discount)||0;
+ const parsedDiscount=discount.trim()===''?0:Number(discount);
  const taxable=Math.max(0,subtotal-parsedDiscount);
  function addProduct(p:Product){setItems(old=>old.some(x=>x.product.id===p.id)?old:[...old,{product:p,quantity:1}]);setNotice('');setError('')}
  async function scanSku(){const sku=barcode.trim();if(!sku)return;
@@ -215,7 +216,8 @@ export function Billing({token,roles}:{token:string;roles:string[]}){
         </label>
        </div>
 
-       {loadingProducts ? <p className="loading-state" role="status">Loading jewellery…</p>
+       {productLoadError && <p className="alert alert-error" role="alert">{productLoadError}</p>}
+        {loadingProducts ? <p className="loading-state" role="status">Loading jewellery…</p>
         : filtered.length === 0 ? <p className="loading-state">No matching available products on this page.</p>
         : <ul className="billing-products">
          {filtered.map(product => {
@@ -263,7 +265,7 @@ export function Billing({token,roles}:{token:string;roles:string[]}){
               <td><strong>{product.name}</strong><small>{product.sku}</small></td>
               <td>{quantity}</td>
               <td className="numeric">{currency(product.sellingPrice)}</td>
-              <td className="numeric"><strong>{currency(product.sellingPrice)}</strong></td>
+              <td className="numeric"><strong>{currency(product.sellingPrice * quantity)}</strong></td>
               <td><button className="icon-button table-action" type="button" aria-label={'Remove ' + product.name} onClick={() => removeProduct(product.id)}><Trash2 size={16} aria-hidden="true" /></button></td>
              </tr>
             ))}
@@ -299,7 +301,9 @@ export function Billing({token,roles}:{token:string;roles:string[]}){
       <h2>Saved invoices</h2>
       <button className="button button-secondary" onClick={() => void loadHistory()} disabled={historyLoading}><RefreshCw size={16} aria-hidden="true" /> Refresh</button>
      </div>
-     {historyLoading ? <p className="loading-state" role="status">Loading invoices…</p>
+     {historyLoadError && <p className="alert alert-error table-alert" role="alert">{historyLoadError}</p>}
+      {historyLoading ? <p className="loading-state" role="status">Loading invoices…</p>
+       : historyLoadError ? null
       : history.length === 0 ? (
        <div className="empty-state">
         <span className="empty-icon"><FileText size={25} aria-hidden="true" /></span>
@@ -362,7 +366,7 @@ export function Billing({token,roles}:{token:string;roles:string[]}){
      {error && <p className="alert alert-error" role="alert">{error}</p>}
      <footer className="modal-actions button-group">
       {selected.status === 'DRAFT' && canCancel && <button className="button button-secondary button-danger" onClick={() => void cancelInvoice(selected.id)}>Cancel draft</button>}
-      <button className="button button-secondary" onClick={() => void smsDraft(selected)}><MessageSquare size={16} aria-hidden="true" /> SMS draft</button>
+      {selected.status === 'DRAFT' && <button className="button button-secondary" onClick={() => void smsDraft(selected)}><MessageSquare size={16} aria-hidden="true" /> SMS draft</button>}
       <button className="button button-primary" onClick={() => printDraft(selected)}><Printer size={16} aria-hidden="true" /> Print draft</button>
      </footer>
     </Modal>
