@@ -9,6 +9,7 @@ import {
 import { Billing } from './Billing';
 import { Inventory, inventoryRequest, useInventorySummary } from './Inventory';
 import { formatINR } from './format';
+import { BrandEmblem, JewelleryArtwork } from './JewelleryArtwork';
 
 type LoginResponse = { accessToken: string };
 type Session = { username: string; roles: string[]; accessToken: string };
@@ -47,7 +48,7 @@ async function signIn(username: string, password: string): Promise<Session> {
 function Brand() {
   return (
     <div className="brand">
-      <span className="brand-mark"><Gem size={22} strokeWidth={1.5} aria-hidden="true" /></span>
+      <span className="brand-mark"><BrandEmblem /></span>
       <span className="brand-wordmark">Shree <em>Jewellers</em></span>
     </div>
   );
@@ -88,9 +89,9 @@ function Login({ onLogin }: { onLogin: (session: Session) => void }) {
       <section className="login-panel" aria-labelledby="login-title">
         <Brand />
         <div className="login-card">
-          <span className="eyebrow">STAFF PORTAL</span>
-          <h1 id="login-title">Welcome back.</h1>
-          <p>Sign in to manage your jewellery store with confidence.</p>
+          <span className="eyebrow">SHREE JEWELLERS / PRIVATE WORKSPACE</span>
+          <h1 id="login-title">A finer way<br /><i>to work.</i></h1>
+          <p>One considered space for your pieces, your people, and your everyday operations.</p>
           <form className="login-form" onSubmit={submit}>
             <label htmlFor="username">Username</label>
             <div className="field-with-icon">
@@ -111,15 +112,18 @@ function Login({ onLogin }: { onLogin: (session: Session) => void }) {
             </button>
           </form>
         </div>
-        <p className="login-footer"><ShieldCheck size={16} aria-hidden="true" /> Authorized staff access</p>
+        <p className="login-footer"><ShieldCheck size={16} aria-hidden="true" /> Secure access for authorized team members <span>© {new Date().getFullYear()} Shree Jewellers</span></p>
       </section>
-      <div className="login-visual jewellery-art">
+      <aside className="login-visual jewellery-art" aria-label="Shree Jewellers brand illustration">
+        <div className="login-visual-topline"><span>THE ART OF DETAIL</span><span>EST. WITH CARE</span></div>
+        <JewelleryArtwork className="login-visual-art" />
         <div className="login-visual-copy">
-          <span className="eyebrow">MADE FOR THE DETAILS</span>
-          <h2>Beautiful jewellery.<br />Better business.</h2>
-          <p>A thoughtful workspace for every piece, every customer, every day.</p>
+          <span className="eyebrow">BEHIND EVERY BRILLIANT PIECE</span>
+          <h2>Crafted for<br /><i>what matters.</i></h2>
+          <p>Modern tools for a timeless craft.</p>
         </div>
-      </div>
+        <div className="login-visual-bottomline"><span>SHREE / JEWELLERS</span><span>01 — STUDIO WORKSPACE</span></div>
+      </aside>
     </main>
   );
 }
@@ -150,7 +154,7 @@ function WorkspaceNavigation({ session, section, onSelect, onLogout, onClose }: 
         <Brand />
         {onClose && <button className="icon-button sidebar-button" aria-label="Close navigation" onClick={onClose}><X size={20} aria-hidden="true" /></button>}
       </div>
-      <span className="sidebar-section-label">STORE MANAGEMENT</span>
+      <span className="sidebar-section-label">WORKSPACE <span className="sidebar-section-line" /></span>
       <nav className="workspace-nav" aria-label="Main navigation">
         {navItems.map(({ label, icon: Icon }) => (
           <button key={label} type="button" aria-current={section === label ? 'page' : undefined} onClick={() => onSelect(label)}>
@@ -160,8 +164,8 @@ function WorkspaceNavigation({ session, section, onSelect, onLogout, onClose }: 
         ))}
       </nav>
       <div className="sidebar-support">
-        <span className="sidebar-support-icon"><ShieldCheck size={19} aria-hidden="true" /></span>
-        <div><strong>Staff workspace</strong><span>Manage with confidence</span></div>
+        <span className="sidebar-support-icon"><BrandEmblem /></span>
+        <div><strong>Shree atelier</strong><span>Designed for the details</span></div>
       </div>
       <div className="sidebar-profile">
         <span className="avatar" aria-hidden="true">{session.username.slice(0, 1).toUpperCase()}</span>
@@ -208,23 +212,26 @@ function Overview({ session, onSelect, inventory, rates, ratesError }: {
     <>
       <div className="page-heading overview-heading">
         <div>
-          <span className="eyebrow">YOUR STORE AT A GLANCE</span>
-          <h1>Store overview</h1>
-          <p>Everything you need to run your day, in one place.</p>
+          <span className="eyebrow">THE DAILY EDIT / STORE OPERATIONS</span>
+          <h1>Good day, <i>{session.username}.</i></h1>
+          <p>A clear view of the pieces and work that matter today.</p>
         </div>
         <button className="button button-primary" onClick={() => onSelect('Billing')}>
           <Plus size={18} aria-hidden="true" /> New draft invoice
         </button>
       </div>
       <section className="overview-hero jewellery-art" aria-labelledby="welcome-title">
+        <div className="hero-noise" aria-hidden="true" />
         <div className="overview-hero-content">
-          <span className="hero-eyebrow">WELCOME BACK, {session.username.toUpperCase()}</span>
-          <h2 id="welcome-title">Every piece<br /><span>matters.</span></h2>
-          <p>Your jewellery business, beautifully organized from inventory to estimates.</p>
+          <span className="hero-eyebrow"><span className="hero-gold-dot" /> THE SHREE COLLECTION</span>
+          <h2 id="welcome-title">Every piece,<br /><i>a story.</i></h2>
+          <p>Keep your collection organized and your customer experience considered, down to the last detail.</p>
           <button className="button hero-button" onClick={() => onSelect('Inventory')}>
-            Explore inventory <ArrowRight size={16} aria-hidden="true" />
+            View your collection <ArrowRight size={17} aria-hidden="true" />
           </button>
         </div>
+        <JewelleryArtwork className="overview-hero-art" />
+        <span className="hero-index" aria-hidden="true">CURATED FOR YOU / 01</span>
       </section>
 
       <section className="quick-actions" aria-label="Quick actions">
@@ -242,7 +249,7 @@ function Overview({ session, onSelect, inventory, rates, ratesError }: {
 
       <section className="overview-section" aria-labelledby="stock-heading">
         <div className="section-heading">
-          <h2 id="stock-heading">Inventory summary</h2>
+          <div><span className="eyebrow">YOUR COLLECTION</span><h2 id="stock-heading">Inventory at a glance</h2></div>
           {!inventoryError && !summary && <span className="muted" role="status">Loading inventory…</span>}
         </div>
         {inventoryError && (
@@ -268,7 +275,7 @@ function Overview({ session, onSelect, inventory, rates, ratesError }: {
       <section className="surface rates-panel" aria-labelledby="rates-heading">
         <div className="section-heading rates-heading">
           <div>
-            <span className="eyebrow">PRECIOUS METALS</span>
+            <span className="eyebrow">THE DAILY RATE CARD</span>
             <h2 id="rates-heading">Gold &amp; silver rates</h2>
             <p>Indicative INR per gram. Excludes GST, making charges and retail premiums.</p>
           </div>
@@ -376,7 +383,7 @@ function Workspace({ session, onLogout }: { session: Session; onLogout: () => vo
             <strong>{section}</strong>
           </div>
           <div className="topbar-meta">
-            <span className="topbar-workspace-label"><Gem size={15} aria-hidden="true" /> Shree Jewellers</span>
+            <span className="topbar-workspace-label"><Gem size={15} aria-hidden="true" /> COLLECTION MANAGEMENT</span>
             <span><CalendarDays size={16} aria-hidden="true" />{dateFormat.format(new Date())}</span>
             <span className="avatar" aria-hidden="true">{session.username.slice(0, 1).toUpperCase()}</span>
           </div>
