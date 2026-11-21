@@ -224,7 +224,7 @@ input::placeholder { color: var(--muted); opacity: 1; }
   color: #785323;
 }
 .jewellery-art {
-  --jewellery-photo: url('./assets/jewellery-editorial.webp');
+  --jewellery-photo: none;
   background-color: var(--sidebar);
 }
 .login-page {
